@@ -12,10 +12,10 @@ services:
       - key: SECRET_KEY
         generateValue: true  # wird einmal erzeugt, danach NIE ändern
       - key: ADMIN_NAME
-        value: Chef          # Name vom Bruder
-      - key: ADMIN_PIN
+        value: Leo          # Name vom Bruder
+      - key: 
         sync: false          # PIN vom Bruder, 4-8 Ziffern
       - key: BUSINESS_NAME
-        value: Bettwäsche-Service
+        value: Leo-Services
       - key: TRUST_PROXY
         value: "1"
