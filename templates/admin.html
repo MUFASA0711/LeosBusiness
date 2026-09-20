@@ -79,9 +79,14 @@
           <label>Preis in € <input name="price" value="{{ p['price_cents']|eur_input }}" inputmode="decimal" required></label>
           <button class="btn primary">Speichern</button>
         </form>
-        <form method="post" action="{{ url_for('package_toggle', pid=p['id']) }}">
-          <button class="linkbtn">{{ 'Ausblenden' if p['active'] else 'Wieder anzeigen' }}</button>
-        </form>
+        <div class="acc-actions">
+          <form method="post" action="{{ url_for('package_toggle', pid=p['id']) }}">
+            <button class="linkbtn">{{ 'Ausblenden' if p['active'] else 'Wieder anzeigen' }}</button>
+          </form>
+          <form method="post" action="{{ url_for('package_delete', pid=p['id']) }}" data-confirm="„{{ p['name'] }}“ endgültig löschen? Bestehende Bestellungen bleiben erhalten.">
+            <button class="btn danger sm">Löschen</button>
+          </form>
+        </div>
       </div>
     </details>
     {% endfor %}
@@ -89,6 +94,7 @@
 
   <details class="acc-plain">
     <summary>Neues Paket anlegen</summary>
+    {% if not categories %}<p class="empty">Lege zuerst unten eine Kategorie an.</p>{% else %}
     <form method="post" action="{{ url_for('package_create') }}" class="stack panel">
       <label>Name <input name="name" maxlength="60" placeholder="z. B. Schuhe putzen" required></label>
       <label>Beschreibung <input name="description" maxlength="120"></label>
@@ -101,6 +107,7 @@
       <label>Preis in € <input name="price" inputmode="decimal" placeholder="3,00" required></label>
       <button class="btn primary">Paket anlegen</button>
     </form>
+    {% endif %}
   </details>
 
   <h2>Kategorien</h2>
@@ -109,11 +116,9 @@
     <div class="item">
       <div class="ic" aria-hidden="true">{{ c['emoji'] }}</div>
       <div class="grow"><strong>{{ c['name'] }}</strong><span class="muted">{{ c['n'] }} Pakete</span></div>
-      {% if c['n'] == 0 %}
-      <form method="post" action="{{ url_for('category_delete', cid=c['id']) }}" data-confirm="Kategorie „{{ c['name'] }}“ löschen?">
-        <button class="btn sm">Löschen</button>
+      <form method="post" action="{{ url_for('category_delete', cid=c['id']) }}" data-confirm="Kategorie „{{ c['name'] }}“ löschen{% if c['n'] %} inklusive {{ c['n'] }} Paketen{% endif %}? Bestehende Bestellungen bleiben erhalten.">
+        <button class="btn danger sm">Löschen</button>
       </form>
-      {% endif %}
     </div>
     {% endfor %}
   </div>
