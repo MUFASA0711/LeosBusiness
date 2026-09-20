@@ -188,6 +188,8 @@ a { color: inherit; }
 .btn:active { transform: scale(0.97); }
 .btn.primary { background: var(--sun); border-color: var(--sun); color: var(--sun-ink); font-weight: 800; }
 .btn.primary:hover { background: #ffdc66; }
+.btn.danger { border-color: rgba(255, 155, 135, 0.55); color: var(--warn); }
+.btn.danger:hover { background: rgba(255, 155, 135, 0.14); }
 .btn.sm { min-height: 44px; padding: 0.45rem 1.05rem; font-size: 0.95rem; }
 .btn.block { width: 100%; }
 .linkbtn { border: 0; background: none; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 0.3rem; }
@@ -299,6 +301,7 @@ details.acc > .acc-body { padding: 0 1.1rem 1rem; }
 details.acc.off strong { color: var(--muted); }
 details.acc .grow { flex: 1; min-width: 0; }
 details.acc strong { display: block; }
+.acc-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
 .acc-plain { margin-top: 1rem; }
 .acc-plain > summary { cursor: pointer; font-weight: 800; padding: 0.6rem 0; }
 
