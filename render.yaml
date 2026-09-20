@@ -13,8 +13,9 @@ services:
         generateValue: true  # wird einmal erzeugt, danach NIE ändern
       - key: ADMIN_NAME
         value: Leo          # Name vom Bruder
+      - key: ADMIN_PIN
         sync: false          # PIN vom Bruder, 4-8 Ziffern
       - key: BUSINESS_NAME
-        value: Leo-Services
+        value: Leos Services
       - key: TRUST_PROXY
         value: "1"
