@@ -131,7 +131,7 @@ ALTER TABLE packages ADD COLUMN IF NOT EXISTS emoji TEXT NOT NULL DEFAULT '✨';
 CREATE TABLE IF NOT EXISTS bookings (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id),
-    package_id BIGINT REFERENCES packages(id),
+    package_id BIGINT REFERENCES packages(id) ON DELETE SET NULL,
     package_name TEXT NOT NULL,
     price_cents INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'offen' CHECK (status IN ('offen','erledigt','storniert')),
@@ -139,6 +139,13 @@ CREATE TABLE IF NOT EXISTS bookings (
     done_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS bookings_user_idx ON bookings(user_id);
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'bookings_package_id_fkey' AND confdeltype <> 'n') THEN
+    ALTER TABLE bookings DROP CONSTRAINT bookings_package_id_fkey;
+    ALTER TABLE bookings ADD CONSTRAINT bookings_package_id_fkey
+      FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id),
@@ -563,6 +570,16 @@ def package_toggle(pid):
     return redirect(url_for("admin", tab="services"))
 
 
+@app.post("/admin/package/<int:pid>/delete")
+@admin_required
+def package_delete(pid):
+    p = db().execute("DELETE FROM packages WHERE id=%s RETURNING name", (pid,)).fetchone()
+    if not p:
+        abort(404)
+    flash(f"„{p['name']}“ gelöscht. Bestehende Bestellungen bleiben erhalten.", "ok")
+    return redirect(url_for("admin", tab="services"))
+
+
 @app.post("/admin/category")
 @admin_required
 def category_create():
@@ -579,12 +596,14 @@ def category_create():
 @app.post("/admin/category/<int:cid>/delete")
 @admin_required
 def category_delete(cid):
-    used = db().execute("SELECT COUNT(*) AS n FROM packages WHERE category_id=%s", (cid,)).fetchone()["n"]
-    if used:
-        flash("Die Kategorie hat noch Pakete und kann nicht gelöscht werden.", "err")
-    else:
-        db().execute("DELETE FROM categories WHERE id=%s", (cid,))
-        flash("Kategorie gelöscht.", "ok")
+    d = db()
+    c = d.execute("SELECT * FROM categories WHERE id=%s", (cid,)).fetchone()
+    if not c:
+        abort(404)
+    with d.transaction():
+        n = d.execute("DELETE FROM packages WHERE category_id=%s", (cid,)).rowcount
+        d.execute("DELETE FROM categories WHERE id=%s", (cid,))
+    flash(f"Kategorie „{c['name']}“ gelöscht" + (f" (mit {n} Paketen)." if n else "."), "ok")
     return redirect(url_for("admin", tab="services"))
 
 
