@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ u['name'] }} · Admin{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin', tab='familie') }}">← Zurück zur Übersicht</a></p>
+<h1 class="title">{{ u['name'] }}</h1>
+
+<section class="panel balance" aria-label="Kontostand">
+  <p class="lbl">Schuldet noch</p>
+  <p class="sum {{ 'zero' if open <= 0 }}">{{ open|eur }}</p>
+  <dl>
+    <div><dt>Gebucht</dt><dd>{{ owed|eur }}</dd></div>
+    <div><dt>Bezahlt</dt><dd>{{ paid|eur }}</dd></div>
+  </dl>
+</section>
+
+<h2>Zahlung eintragen</h2>
+<form method="post" action="{{ url_for('payment_add', uid=u['id']) }}" class="stack panel" style="max-width: 30rem">
+  <label>Betrag in €
+    <input name="amount" inputmode="decimal" value="{{ open|eur_input if open > 0 else '' }}" placeholder="3,00" required>
+  </label>
+  <label>Notiz <small>optional</small>
+    <input name="note" maxlength="80" placeholder="z. B. bar bezahlt">
+  </label>
+  <button class="btn primary">Zahlung speichern</button>
+</form>
+
+<h2>Buchungen</h2>
+{% if bookings %}
+<div class="list">
+  {% for b in bookings %}
+  <div class="item {{ 'struck' if b['status'] == 'storniert' }}">
+    <div class="ic" aria-hidden="true">{{ b['emoji'] }}</div>
+    <div class="grow"><strong>{{ b['package_name'] }}</strong><span class="muted">{{ b['created_at']|datum }}</span></div>
+    <span class="pill {{ b['status'] }}">{{ b['status']|status }}</span>
+    <span class="price">{{ b['price_cents']|eur }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<p class="empty">Noch nichts gebucht.</p>{% endif %}
+
+<h2>Zahlungen</h2>
+{% if payments %}
+<div class="list">
+  {% for p in payments %}
+  <div class="item">
+    <div class="ic" aria-hidden="true">💶</div>
+    <div class="grow"><strong>{{ p['created_at']|datum }}</strong>{% if p['note'] %}<span class="muted">{{ p['note'] }}</span>{% endif %}</div>
+    <span class="price ok">{{ p['amount_cents']|eur }}</span>
+    <form method="post" action="{{ url_for('payment_delete', pid=p['id']) }}" data-confirm="Zahlung wirklich löschen?">
+      <button class="btn sm">Löschen</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<p class="empty">Noch keine Zahlung.</p>{% endif %}
+
+<details class="acc-plain">
+  <summary>PIN zurücksetzen</summary>
+  <form method="post" action="{{ url_for('pin_reset', uid=u['id']) }}" class="stack panel" style="max-width: 30rem">
+    <label>Neue PIN <small>4 bis 8 Ziffern</small>
+      <input class="pin show" name="pin" type="text" inputmode="numeric" autocomplete="off" maxlength="8" required>
+    </label>
+    <button class="btn">PIN speichern</button>
+  </form>
+</details>
+{% endblock %}

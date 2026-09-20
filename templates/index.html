@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Willkommen zu meinen Services. <span>Ich mache alles für kleines Geld.</span></h1>
+  <p class="hero-sub" data-rotate='{{ lines|tojson }}'>{{ lines[0] }}</p>
+  <div class="hero-cta">
+    {% if g.user %}
+      <a class="btn primary" href="{{ url_for('services') }}">Services ansehen</a>
+      <a class="btn" href="{{ url_for('orders') }}">Meine Bestellungen</a>
+      <a class="btn" href="{{ url_for('billing') }}">Offen: {{ open|eur }}</a>
+    {% else %}
+      <button type="button" class="btn primary" data-open="auth" data-tab="login">Anmelden</button>
+      <button type="button" class="btn" data-open="auth" data-tab="register">Konto anlegen</button>
+    {% endif %}
+  </div>
+</section>
+
+{% if g.user and featured %}
+<h2>Gleich loslegen</h2>
+<div class="grid">
+  {% for p in featured %}{% include "_card.html" %}{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

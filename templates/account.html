@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Mein Konto · {{ BUSINESS }}{% endblock %}
+{% block content %}
+<h1 class="title">Mein Konto</h1>
+<section class="panel" style="max-width: 26rem">
+  <p class="muted">Angemeldet als{% if g.user['is_admin'] %} (Verwaltung){% endif %}</p>
+  <p style="margin: 0 0 1rem; font-size: 1.3rem; font-weight: 800">{{ g.user['name'] }}</p>
+  <h2 style="margin-top: 1.2rem">PIN ändern</h2>
+  <form method="post" action="{{ url_for('account_pin') }}" class="stack">
+    <label>Neue PIN <small>4 bis 8 Ziffern</small>
+      <input class="pin" name="pin" type="text" inputmode="numeric" autocomplete="off" maxlength="8" required>
+    </label>
+    <button class="btn primary">PIN speichern</button>
+  </form>
+  <form method="post" action="{{ url_for('logout') }}"><button class="btn block">Abmelden</button></form>
+</section>
+{% endblock %}

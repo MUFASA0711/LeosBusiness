@@ -1,0 +1,21 @@
+# Render-Blueprint: Web-Dienst aus dem Dockerfile.
+# Die Datenbank ist extern (Postgres in der Cloud), Zugangsdaten trägst du im Dashboard ein.
+services:
+  - type: web
+    name: familien-service
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Postgres-URL eintragen (siehe README)
+      - key: SECRET_KEY
+        generateValue: true  # wird einmal erzeugt, danach NIE ändern
+      - key: ADMIN_NAME
+        value: Chef          # Name vom Bruder
+      - key: ADMIN_PIN
+        sync: false          # PIN vom Bruder, 4-8 Ziffern
+      - key: BUSINESS_NAME
+        value: Bettwäsche-Service
+      - key: TRUST_PROXY
+        value: "1"

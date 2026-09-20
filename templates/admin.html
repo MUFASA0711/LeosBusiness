@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ BUSINESS }}{% endblock %}
+{% block content %}
+<h1 class="title">Verwaltung</h1>
+
+<section class="panel balance" aria-label="Übersicht">
+  <p class="lbl">Insgesamt noch offen</p>
+  <p class="sum {{ 'zero' if total_open <= 0 }}">{{ total_open|eur }}</p>
+  <dl>
+    <div><dt>Schon bezahlt</dt><dd>{{ total_paid|eur }}</dd></div>
+    <div><dt>Zu erledigen</dt><dd>{{ pending|length }}</dd></div>
+  </dl>
+</section>
+
+<div class="toolbar" style="margin-top: 1.4rem">
+  <div class="seg" data-filter-for=".sec" data-filter-attr="tab">
+    <button type="button" class="{{ 'on' if tab == 'auftraege' }}" data-filter="auftraege">Aufträge ({{ pending|length }})</button>
+    <button type="button" class="{{ 'on' if tab == 'familie' }}" data-filter="familie">Familie</button>
+    <button type="button" class="{{ 'on' if tab == 'services' }}" data-filter="services">Services</button>
+  </div>
+</div>
+
+<section class="sec" data-tab="auftraege" {% if tab != 'auftraege' %}hidden{% endif %}>
+  {% if pending %}
+  <div class="list">
+    {% for b in pending %}
+    <div class="item">
+      <div class="ic" aria-hidden="true">{{ b['emoji'] }}</div>
+      <div class="grow"><strong>{{ b['package_name'] }}</strong>
+        <span class="muted">{{ b['user_name'] }}, gebucht am {{ b['created_at']|datum }}</span></div>
+      <span class="price">{{ b['price_cents']|eur }}</span>
+      <form method="post" action="{{ url_for('booking_done', bid=b['id']) }}"><button class="btn primary sm">Erledigt</button></form>
+      <form method="post" action="{{ url_for('cancel', bid=b['id']) }}" data-confirm="Buchung wirklich stornieren?">
+        <input type="hidden" name="back" value="admin">
+        <button class="btn sm">Stornieren</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Nichts offen. Zeit für eine Pause. ☕</p>{% endif %}
+</section>
+
+<section class="sec" data-tab="familie" {% if tab != 'familie' %}hidden{% endif %}>
+  {% if customers %}
+  <div class="list">
+    {% for c in customers %}
+    {% set o = c['owed'] - c['paid'] %}
+    <a class="item" href="{{ url_for('admin_user', uid=c['id']) }}">
+      <div class="ic" aria-hidden="true">🙂</div>
+      <div class="grow"><strong>{{ c['name'] }}</strong>
+        <span class="muted">gebucht {{ c['owed']|eur }}, bezahlt {{ c['paid']|eur }}</span></div>
+      <span class="price {{ 'warn' if o > 0 else 'ok' }}">{{ o|eur }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}<p class="empty">Noch niemand registriert. Familienmitglieder legen ihr Konto selbst an.</p>{% endif %}
+</section>
+
+<section class="sec" data-tab="services" {% if tab != 'services' %}hidden{% endif %}>
+  <div class="list">
+    {% for p in packages %}
+    <details class="acc {{ 'off' if not p['active'] }}">
+      <summary>
+        <div class="ic item-ic" aria-hidden="true" style="width:2.6rem;height:2.6rem;display:grid;place-items:center;font-size:1.35rem;border-radius:14px;background:var(--glass2)">{{ p['emoji'] }}</div>
+        <div class="grow"><strong>{{ p['name'] }}</strong>
+          <span class="muted">{{ p['cat_name'] or 'Ohne Kategorie' }}{% if not p['active'] %} · ausgeblendet{% endif %}</span></div>
+        <span class="price">{{ p['price_cents']|eur }}</span>
+      </summary>
+      <div class="acc-body">
+        <form method="post" action="{{ url_for('package_edit', pid=p['id']) }}" class="stack">
+          <label>Name <input name="name" value="{{ p['name'] }}" maxlength="60" required></label>
+          <label>Beschreibung <input name="description" value="{{ p['description'] }}" maxlength="120"></label>
+          <label>Kategorie
+            <select name="category_id">
+              {% for c in categories %}<option value="{{ c['id'] }}" {{ 'selected' if c['id'] == p['category_id'] }}>{{ c['emoji'] }} {{ c['name'] }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Symbol <input class="emoji" name="emoji" value="{{ p['emoji'] }}" maxlength="8"></label>
+          <label>Preis in € <input name="price" value="{{ p['price_cents']|eur_input }}" inputmode="decimal" required></label>
+          <button class="btn primary">Speichern</button>
+        </form>
+        <form method="post" action="{{ url_for('package_toggle', pid=p['id']) }}">
+          <button class="linkbtn">{{ 'Ausblenden' if p['active'] else 'Wieder anzeigen' }}</button>
+        </form>
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+
+  <details class="acc-plain">
+    <summary>Neues Paket anlegen</summary>
+    <form method="post" action="{{ url_for('package_create') }}" class="stack panel">
+      <label>Name <input name="name" maxlength="60" placeholder="z. B. Schuhe putzen" required></label>
+      <label>Beschreibung <input name="description" maxlength="120"></label>
+      <label>Kategorie
+        <select name="category_id">
+          {% for c in categories %}<option value="{{ c['id'] }}">{{ c['emoji'] }} {{ c['name'] }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Symbol <input class="emoji" name="emoji" value="✨" maxlength="8"></label>
+      <label>Preis in € <input name="price" inputmode="decimal" placeholder="3,00" required></label>
+      <button class="btn primary">Paket anlegen</button>
+    </form>
+  </details>
+
+  <h2>Kategorien</h2>
+  <div class="list">
+    {% for c in categories %}
+    <div class="item">
+      <div class="ic" aria-hidden="true">{{ c['emoji'] }}</div>
+      <div class="grow"><strong>{{ c['name'] }}</strong><span class="muted">{{ c['n'] }} Pakete</span></div>
+      {% if c['n'] == 0 %}
+      <form method="post" action="{{ url_for('category_delete', cid=c['id']) }}" data-confirm="Kategorie „{{ c['name'] }}“ löschen?">
+        <button class="btn sm">Löschen</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <details class="acc-plain">
+    <summary>Neue Kategorie anlegen</summary>
+    <form method="post" action="{{ url_for('category_create') }}" class="stack panel">
+      <label>Name <input name="name" maxlength="30" placeholder="z. B. Tiere" required></label>
+      <label>Symbol <input class="emoji" name="emoji" value="✨" maxlength="8"></label>
+      <button class="btn primary">Kategorie anlegen</button>
+    </form>
+  </details>
+</section>
+{% endblock %}

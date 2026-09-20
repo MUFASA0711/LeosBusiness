@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1420">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ BUSINESS }}">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icon.svg') }}">
+  <title>{% block title %}{{ BUSINESS }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='ui.js') }}" defer></script>
+</head>
+<body data-auth="{{ request.args.get('auth', '') if not g.user and request.args.get('auth') in ('login', 'register') else '' }}">
+  <div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <header class="bar">
+    <div class="bar-l">
+      {% if g.user %}
+      <div class="dd">
+        <button type="button" class="iconbtn" data-menu aria-label="Menü" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <nav class="menu menu-l" aria-label="Hauptmenü">
+          {% if g.user['is_admin'] %}
+          <a class="mi {{ 'on' if request.endpoint == 'admin' and tab == 'auftraege' }}" href="{{ url_for('admin', tab='auftraege') }}"><span class="em">📋</span>Aufträge</a>
+          <a class="mi {{ 'on' if request.endpoint == 'admin_user' or (request.endpoint == 'admin' and tab == 'familie') }}" href="{{ url_for('admin', tab='familie') }}"><span class="em">👪</span>Familie &amp; Zahlungen</a>
+          <a class="mi {{ 'on' if request.endpoint == 'admin' and tab == 'services' }}" href="{{ url_for('admin', tab='services') }}"><span class="em">🛍️</span>Services verwalten</a>
+          <hr>
+          <a class="mi {{ 'on' if request.endpoint == 'account' }}" href="{{ url_for('account') }}"><span class="em">⚙️</span>Mein Konto</a>
+          {% else %}
+          <a class="mi {{ 'on' if request.endpoint == 'index' }}" href="{{ url_for('index') }}"><span class="em">🏠</span>Startseite</a>
+          <a class="mi {{ 'on' if request.endpoint == 'services' }}" href="{{ url_for('services') }}"><span class="em">🛍️</span>Pakete &amp; Services</a>
+          <a class="mi {{ 'on' if request.endpoint == 'orders' }}" href="{{ url_for('orders') }}"><span class="em">📦</span>Bestellungen</a>
+          <a class="mi {{ 'on' if request.endpoint == 'billing' }}" href="{{ url_for('billing') }}"><span class="em">🧾</span>Abrechnungen</a>
+          <a class="mi {{ 'on' if request.endpoint == 'account' }}" href="{{ url_for('account') }}"><span class="em">⚙️</span>Mein Konto</a>
+          {% endif %}
+        </nav>
+      </div>
+      {% endif %}
+      <a class="brand" href="{{ url_for('admin') if g.user and g.user['is_admin'] else url_for('index') }}">🧺 {{ BUSINESS }}</a>
+    </div>
+
+    <div class="bar-r">
+      <div class="dd">
+        <button type="button" class="iconbtn" data-menu aria-label="Benutzer" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        </button>
+        <div class="menu menu-r">
+          {% if g.user %}
+          <p class="mi-head">Angemeldet als {{ g.user['name'] }}{% if g.user['is_admin'] %} (Verwaltung){% endif %}</p>
+          <a class="mi" href="{{ url_for('account') }}"><span class="em">⚙️</span>Mein Konto</a>
+          <form method="post" action="{{ url_for('logout') }}"><button class="mi"><span class="em">👋</span>Abmelden</button></form>
+          {% else %}
+          <button type="button" class="mi" data-open="auth" data-tab="login"><span class="em">🔑</span>Anmelden</button>
+          <button type="button" class="mi" data-open="auth" data-tab="register"><span class="em">✨</span>Registrieren</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if not g.user %}
+  <div class="modal" id="auth" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Anmelden oder registrieren">
+      <button type="button" class="x" data-close aria-label="Schließen">×</button>
+      <div class="seg" data-filter-for="#auth .pane" data-filter-attr="pane">
+        <button type="button" class="on" data-filter="login">Anmelden</button>
+        <button type="button" data-filter="register">Registrieren</button>
+      </div>
+      <div class="pane" data-pane="login">
+        <h2>Schön, dass du da bist</h2>
+        <p class="muted">Deine PIN reicht.</p>
+        <form method="post" action="{{ url_for('login') }}" class="stack">
+          <label>PIN
+            <input class="pin" name="pin" type="text" inputmode="numeric" autocomplete="off" maxlength="8" required>
+          </label>
+          <button class="btn primary block">Anmelden</button>
+        </form>
+      </div>
+      <div class="pane" data-pane="register" hidden>
+        <h2>Konto anlegen</h2>
+        <p class="muted">Nur Name und PIN, mehr braucht es nicht.</p>
+        <form method="post" action="{{ url_for('register') }}" class="stack">
+          <label>Dein Name
+            <input name="name" maxlength="30" autocomplete="name" required>
+          </label>
+          <label>Deine PIN <small>4 bis 8 Ziffern, damit meldest du dich künftig an</small>
+            <input class="pin" name="pin" type="text" inputmode="numeric" autocomplete="off" maxlength="8" required>
+          </label>
+          <button class="btn primary block">Konto anlegen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="toasts" aria-live="polite">
+    {% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="toast {{ cat }}">{{ msg }}</div>{% endfor %}
+  </div>
+</body>
+</html>

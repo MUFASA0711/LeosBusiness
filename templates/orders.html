@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Bestellungen · {{ BUSINESS }}{% endblock %}
+{% block content %}
+<h1 class="title">Bestellungen</h1>
+
+<div class="toolbar">
+  <div class="seg" data-filter-for=".order" data-filter-attr="status" data-filter-empty="#none">
+    <button type="button" class="on" data-filter="all">Alle</button>
+    <button type="button" data-filter="offen">Gebucht</button>
+    <button type="button" data-filter="erledigt">Erledigt</button>
+    <button type="button" data-filter="storniert">Storniert</button>
+  </div>
+</div>
+
+{% if bookings %}
+<div class="list">
+  {% for b in bookings %}
+  <div class="item order {{ 'struck' if b['status'] == 'storniert' }}" data-status="{{ b['status'] }}">
+    <div class="ic" aria-hidden="true">{{ b['emoji'] }}</div>
+    <div class="grow"><strong>{{ b['package_name'] }}</strong>
+      <span class="muted">{{ b['created_at']|datum }}{% if b['done_at'] %}, erledigt am {{ b['done_at']|datum }}{% endif %}</span></div>
+    <span class="pill {{ b['status'] }}">{{ b['status']|status }}</span>
+    <span class="price">{{ b['price_cents']|eur }}</span>
+    {% if b['status'] == 'offen' %}
+    <form method="post" action="{{ url_for('cancel', bid=b['id']) }}" data-confirm="Buchung wirklich stornieren?">
+      <input type="hidden" name="back" value="orders">
+      <button class="btn sm">Stornieren</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+<p class="empty" id="none" hidden>Hier ist nichts mit diesem Status.</p>
+{% else %}
+<p class="empty" id="none">Noch nichts gebucht. Unter <a href="{{ url_for('services') }}">Pakete &amp; Services</a> geht’s los.</p>
+{% endif %}
+{% endblock %}

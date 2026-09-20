@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Abrechnungen · {{ BUSINESS }}{% endblock %}
+{% block content %}
+<h1 class="title">Abrechnungen</h1>
+
+<section class="panel balance" aria-label="Kontostand">
+  <p class="lbl">Noch offen</p>
+  <p class="sum {{ 'zero' if open <= 0 }}">{{ open|eur }}</p>
+  <div class="track" aria-hidden="true"><b style="width: {{ pct }}%"></b></div>
+  <dl>
+    <div><dt>Gebucht</dt><dd>{{ owed|eur }}</dd></div>
+    <div><dt>Bezahlt</dt><dd>{{ paid|eur }}</dd></div>
+  </dl>
+  {% if open < 0 %}<p class="note">Du hast {{ (-open)|eur }} Guthaben.</p>{% endif %}
+</section>
+
+<h2>Monatsübersicht</h2>
+{% if months %}
+<div class="panel">
+  <table class="tbl">
+    <thead><tr><th>Monat</th><th>Bestellungen</th><th>Betrag</th><th>Bezahlt</th></tr></thead>
+    <tbody>
+      {% for m in months %}
+      <tr><td>{{ m['label'] }}</td><td>{{ m['n'] }}</td><td>{{ m['sum']|eur }}</td><td>{{ m['paid']|eur }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}<p class="empty">Noch keine Buchungen.</p>{% endif %}
+
+<h2>Zahlungen</h2>
+{% if payments %}
+<div class="list">
+  {% for p in payments %}
+  <div class="item">
+    <div class="ic" aria-hidden="true">💶</div>
+    <div class="grow"><strong>{{ p['created_at']|datum }}</strong>{% if p['note'] %}<span class="muted">{{ p['note'] }}</span>{% endif %}</div>
+    <span class="price ok">{{ p['amount_cents']|eur }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<p class="empty">Noch keine Zahlung eingetragen.</p>{% endif %}
+{% endblock %}

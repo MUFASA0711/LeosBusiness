@@ -1,0 +1,14 @@
+{# Service-Karte: p = Paket #}
+<article class="card" data-cat="{{ p['category_id'] or 0 }}">
+  <div class="card-ic" aria-hidden="true">{{ p['emoji'] }}</div>
+  <div class="card-body">
+    <h3>{{ p['name'] }}</h3>
+    {% if p['description'] %}<span class="muted">{{ p['description'] }}</span>{% endif %}
+  </div>
+  <div class="card-foot">
+    <span class="price">{{ p['price_cents']|eur }}</span>
+    <form method="post" action="{{ url_for('book', pid=p['id']) }}" data-confirm="„{{ p['name'] }}“ für {{ p['price_cents']|eur }} buchen?">
+      <button class="btn primary sm">Buchen</button>
+    </form>
+  </div>
+</article>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Services · {{ BUSINESS }}{% endblock %}
+{% block content %}
+<h1 class="title">Pakete &amp; Services</h1>
+
+<div class="toolbar">
+  <div class="dd" data-filter-for=".grid .card" data-filter-attr="cat" data-filter-empty="#none" data-filter-count="#count">
+    <button type="button" class="select" data-menu aria-haspopup="listbox" aria-expanded="false">
+      <span class="sel-k">Kategorie</span><strong data-filter-label>Alle</strong>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="menu menu-l" role="listbox">
+      <button type="button" class="mi on" role="option" data-filter="all" data-label="Alle"><span class="em">🛍️</span>Alle Kategorien<span class="count">{{ packages|length }}</span></button>
+      {% for c in categories %}
+      <button type="button" class="mi" role="option" data-filter="{{ c['id'] }}" data-label="{{ c['name'] }}"><span class="em">{{ c['emoji'] }}</span>{{ c['name'] }}<span class="count">{{ c['n'] }}</span></button>
+      {% endfor %}
+    </div>
+  </div>
+  <span class="muted"><span id="count">{{ packages|length }}</span> Services</span>
+</div>
+
+<div class="grid">
+  {% for p in packages %}{% include "_card.html" %}{% endfor %}
+</div>
+<p class="empty" id="none" {% if packages %}hidden{% endif %}>In dieser Kategorie gibt es gerade nichts.</p>
+{% endblock %}
